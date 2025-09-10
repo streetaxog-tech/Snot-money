@@ -3,26 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNOT Finance Panel</title>
+<title>SNOT Premium Finance Panel</title>
 <style>
 /* Background video */
 #bg-video {
-  position: fixed;
-  right: 0; bottom: 0;
-  min-width: 100%; min-height: 100%;
-  z-index: -1;
-  object-fit: cover;
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  z-index:-1;
 }
 
-/* General styles */
-body { font-family: Arial, sans-serif; margin:0; color:#e0e0e0; }
-header { text-align:center; padding:20px; color:#00d4ff; font-size:2rem; font-weight:bold; }
-.card { background: rgba(31,31,46,0.9); padding:20px; border-radius:12px; margin-bottom:20px; }
+/* Body and general */
+body { margin:0; font-family: Arial, sans-serif; color:#e0e0e0; }
+header { text-align:center; padding:20px; color:#00d4ff; font-size:2rem; font-weight:bold; text-shadow:0 0 10px #00d4ff; }
+
+/* Cards */
+.card { background: rgba(31,31,46,0.95); padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 8px 20px rgba(0,0,0,0.5); }
 input, select, button { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:none; font-size:1rem; }
 button { background:#00d4ff; color:#121212; cursor:pointer; font-weight:bold; }
 
-#dashboard-section { max-width:900px; margin:20px auto; }
-
+/* Dashboard */
+#dashboard-section { max-width:1000px; margin:20px auto; }
 table { width:100%; border-collapse:collapse; margin-top:20px; }
 table th, table td { padding:12px; border-bottom:1px solid #444; }
 
@@ -32,17 +33,32 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
   display:flex; flex-direction:column; gap:12px; align-items:center; z-index:9999;
 }
 .notification-item {
-  background:linear-gradient(135deg, #1c1c2e, #2e2e4a);
-  color:#fff; padding:16px; border-radius:12px; width:350px;
+  background: linear-gradient(135deg,#FFD700,#FF8C00);
+  color:#121212;
+  padding:16px; border-radius:12px;
+  width:350px;
   display:flex; align-items:center; gap:12px;
   animation: slideDown 0.5s ease, fadeOut 0.5s ease forwards;
 }
-.notification-item img { width:40px; height:40px; border-radius:6px; object-fit:cover; }
+.notification-item img { width:50px; height:50px; border-radius:6px; object-fit:cover; }
 .notification-item .text { display:flex; flex-direction:column; }
-.notification-item strong { font-size:1.1rem; }
-.notification-item small { font-size:0.8rem; color:#ccc; }
+.notification-item strong { font-size:1.2rem; }
+.notification-item small { font-size:0.85rem; color:#333; }
 @keyframes slideDown { from {transform:translateY(-50px); opacity:0;} to {transform:translateY(0); opacity:1;} }
-@keyframes fadeOut { 0% {opacity:1;} 80% {opacity:1;} 100% {opacity:0;} }
+@keyframes fadeOut {0%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;}}
+
+/* Bank cards horizontal scroll */
+#bank-accounts-container {
+  display:flex; overflow-x:auto; gap:15px; padding:10px 0;
+}
+.bank-card { min-width:220px; background:rgba(31,31,46,0.95); padding:15px; border-radius:12px; flex-shrink:0; box-shadow:0 8px 20px rgba(0,0,0,0.5); position:relative; }
+.bank-card img { width:50px; height:50px; object-fit:cover; border-radius:6px; }
+.bank-card button { margin-top:10px; width:100%; }
+.add-card { display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:2rem; color:#00d4ff; font-weight:bold; }
+.add-card div { font-size:1rem; margin-top:10px; font-weight:normal; color:#e0e0e0; }
+
+/* QR code inside bank card */
+.bank-card .qr-code { width:50px; height:50px; position:absolute; top:10px; right:10px; border-radius:6px; object-fit:cover; }
 </style>
 </head>
 <body>
@@ -53,7 +69,7 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
   Your browser does not support the video tag.
 </video>
 
-<header>SNOT Finance Panel</header>
+<header>SNOT Premium Finance Panel</header>
 
 <!-- Login -->
 <div id="login-section" class="card" style="max-width:400px;margin:20px auto;">
@@ -66,7 +82,6 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 <!-- Dashboard -->
 <div id="dashboard-section" style="display:none;">
 
-<!-- Welcome & Earnings -->
 <div class="card">
 <h3>Welcome, <span id="user-email"></span></h3>
 <h3>Total Earnings: ₹<span id="total-earnings">0.00</span></h3>
@@ -81,10 +96,11 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 <input type="text" id="ifsc" placeholder="IFSC Code"/>
 <input type="text" id="mobile-number" placeholder="Mobile Number"/>
 <select id="acc-type"><option value="corporate">Corporate</option><option value="saving">Saving</option></select>
-<button onclick="addBankAccount()">Add Account</button>
+<input type="file" id="bank-qr" accept="image/*"/>
+<button onclick="addBankAccount()">Add Bank</button>
 </div>
 
-<!-- Bank Accounts List -->
+<!-- Horizontal scroll bank accounts -->
 <div id="bank-accounts-container"></div>
 
 <!-- Withdrawal Section -->
@@ -103,9 +119,9 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 <tbody id="transaction-log"></tbody>
 </table>
 </div>
+
 </div>
 
-<!-- Notifications -->
 <div id="notification-box"></div>
 
 <script>
@@ -117,7 +133,7 @@ let bankLogos={'HDFC':'https://1000logos.net/wp-content/uploads/2021/05/HDFC-Ban
 function login(){
 const email=document.getElementById('email').value;
 const password=document.getElementById('password').value;
-if(email==='demo@gmail.com' && password==='@12345'){
+if(email==='demo@gmail.com'&&password==='@12345'){
 document.getElementById('login-section').style.display='none';
 document.getElementById('dashboard-section').style.display='block';
 document.getElementById('user-email').innerText=email;
@@ -132,35 +148,41 @@ const accNumber=document.getElementById('account-number').value;
 const ifsc=document.getElementById('ifsc').value;
 const mobile=document.getElementById('mobile-number').value;
 const accType=document.getElementById('acc-type').value;
-if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields');return;}
-const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType};
+const qrInput=document.getElementById('bank-qr');
+let qrUrl="";
+if(qrInput.files && qrInput.files[0]){
+qrUrl=URL.createObjectURL(qrInput.files[0]);
+}
+if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields'); return;}
+const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType,qrUrl};
 bankAccounts.push(newAccount);
 renderBankAccounts();
-simulateDepositNotifications(newAccount);
+simulateDeposit(newAccount);
 alert('Account added successfully');
+qrInput.value="";
 }
 
-// Render bank accounts as cards with withdraw button
+// Render bank cards horizontally
 function renderBankAccounts(){
 const container=document.getElementById('bank-accounts-container');
-container.innerHTML='';
+container.innerHTML=`<div class="bank-card add-card" onclick="showAddForm()"><div>+</div><div>Add Bank</div></div>`;
 bankAccounts.forEach((acc,i)=>{
-const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/40?text=Bank';
-container.innerHTML+=`<div class="card">
-<img src="${logo}" alt="Logo" style="width:40px;height:40px;float:left;margin-right:10px;">
-<strong>${acc.bankName} (${acc.accNumber})</strong><br>
+const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/50?text=Bank';
+const qrHTML=acc.qrUrl ? `<img src="${acc.qrUrl}" class="qr-code">` : "";
+container.innerHTML+=`<div class="bank-card">${qrHTML}<img src="${logo}" alt="Logo"><strong>${acc.bankName} (${acc.accNumber})</strong><br>
 Holder: ${acc.holderName}<br>
 <input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
-<button onclick="withdraw(${i})">Withdraw to Your Account (3% commission)</button>
-<div style="clear:both;"></div>
+<button onclick="withdraw(${i})">Withdraw (3% commission)</button>
 </div>`;
 });
 }
 
-// Withdraw per account with 3% commission
+function showAddForm(){ window.scrollTo({top:0,behavior:'smooth'}); }
+
+// Withdraw per account
 function withdraw(index){
 const acc=bankAccounts[index];
-const input=document.getElementById('withdraw-'+index);
+let input=document.getElementById('withdraw-'+index);
 let amount=parseFloat(input.value);
 if(!amount||amount<=0){alert('Enter valid amount'); return;}
 const commission=amount*0.03;
@@ -168,7 +190,6 @@ const finalAmount=amount-commission;
 if(finalAmount>totalEarnings){alert('Insufficient balance'); return;}
 totalEarnings-=finalAmount;
 document.getElementById('total-earnings').innerText=totalEarnings.toFixed(2);
-
 const now=new Date().toLocaleString();
 transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:finalAmount.toFixed(2),type:'Withdrawal'});
 updateTransactionTable();
@@ -176,12 +197,12 @@ showNotification(acc.bankName,acc.accNumber,finalAmount.toFixed(2)+' Sent');
 input.value='';
 }
 
-// Deposit simulation per account
-function simulateDepositNotifications(acc){
+// Deposit simulation
+function simulateDeposit(acc){
 function randomTime(){return Math.floor(Math.random()*(10000-2000+1))+2000;}
 setInterval(()=>{
 const randomAmount=Math.floor(Math.random()*(5000-100+1))+100;
-const netAmount=randomAmount-(randomAmount*0.03); // 3% commission
+const netAmount=randomAmount-(randomAmount*0.03);
 totalEarnings+=netAmount;
 const now=new Date().toLocaleString();
 transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:netAmount.toFixed(2),type:'Deposit'});
@@ -190,13 +211,13 @@ showNotification(acc.bankName,acc.accNumber,netAmount.toFixed(2));
 },randomTime());
 }
 
-// Transaction table update
+// Transaction log
 function updateTransactionTable(){
 const tbody=document.getElementById('transaction-log');
 tbody.innerHTML=transactionHistory.map(trx=>`<tr><td>${trx.date}</td><td>${trx.account}</td><td>₹${trx.amount}</td><td>${trx.type}</td></tr>`).join('');
 }
 
-// Generate withdrawal suggestion
+// Withdrawal suggestion
 function generateWithdrawal(){
 const suggestedAmount=Math.floor(Math.random()*(10000-500+1))+500;
 document.getElementById('withdrawal-suggestion').innerText=suggestedAmount;
@@ -207,25 +228,23 @@ function showNotification(bankName,accNumber,amount){
 const box=document.getElementById('notification-box');
 const item=document.createElement('div');
 item.classList.add('notification-item');
-const logo=bankLogos[bankName]||'https://via.placeholder.com/40?text=Bank';
+const logo=bankLogos[bankName]||'https://via.placeholder.com/50?text=Bank';
 item.innerHTML=`<img src="${logo}" alt="Logo"><div class="text"><strong>₹${amount}</strong><small>${bankName} (${accNumber})</small></div>`;
 box.appendChild(item);
-setTimeout(()=>{item.style.animation='fadeOut 0.5s ease forwards';setTimeout(()=>item.remove(),500);},5000);
+setTimeout(()=>{item.style.animation='fadeOut 0.5s ease forwards'; setTimeout(()=>item.remove(),500);},5000);
 }
 
-// Export CSV
+// CSV export
 function exportCSV(){
-if(transactionHistory.length===0){alert('No transactions to export'); return;}
-let csvContent="data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
-transactionHistory.forEach(trx=>{csvContent+=`${trx.date},${trx.account},${trx.amount},${trx.type}\n`;});
-const encodedUri=encodeURI(csvContent);
+if(transactionHistory.length===0){alert('No transactions'); return;}
+let csv="data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
+transactionHistory.forEach(trx=>{csv+=`${trx.date},${trx.account},${trx.amount},${trx.type}\n`;});
+const encodedUri=encodeURI(csv);
 const link=document.createElement("a");
 link.setAttribute("href",encodedUri);
 link.setAttribute("download","transaction_log.csv");
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
+document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 </script>
 </body>
-    </html>
+</html>
