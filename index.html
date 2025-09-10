@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Premium Payment Gateway Panel</title>
+    <link rel="icon" href="favicon.png" type="image/png"/>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #00d4ff;
+        }
+
+        input, button, select {
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            margin: 8px 0;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #00d4ff;
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .card {
+            background: #1f1f2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border-bottom: 1px solid #444;
+        }
+
+        #notification-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notification-item {
+            background: linear-gradient(135deg, #1c1c2e, #2e2e4a);
+            color: #ffffff;
+            padding: 18px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            font-family: 'Arial', sans-serif;
+            width: 320px;
+            animation: slideIn 0.8s ease, fadeOut 0.6s ease forwards;
+            opacity: 1;
+        }
+
+        .notification-item strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+
+        .notification-item small {
+            font-size: 0.8rem;
+            color: #cccccc;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1><img src="logo.jpg" alt="Logo" style="height:40px; vertical-align:middle;"> Premium Payment Gateway</h1>
+    </header>
+
+    <div id="login-section" class="card">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email" value="demo@gmail.com"/>
+        <input type="password" id="password" placeholder="Password" value="@12345"/>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="dashboard-section" style="display: none;">
+        <div class="card">
+            <h3>Welcome, <span id="user-email"></span></h3>
+            <h3>Total Earnings: ₹<span id="total-earnings">0.00</span></h3>
+        </div>
+
+        <div class="card">
+            <h3>Add Bank Account</h3>
+            <input type="text" id="bank-name" placeholder="Bank Name"/>
+            <input type="text" id="holder-name" placeholder="Account Holder Name"/>
+            <input type="text" id="account-number" placeholder="Account Number"/>
+            <input type="text" id="ifsc" placeholder="IFSC Code"/>
+            <input type="text" id="mobile-number" placeholder="Mobile Number"/>
+            <select id="acc-type">
+                <option value="corporate">Corporate</option>
+                <option value="saving">Saving</option>
+            </select>
+            <button onclick="addBankAccount()">Add Account</button>
+        </div>
+
+        <div class="card">
+            <h3>Withdrawal Send</h3>
+            <button onclick="generateWithdrawal()">Generate Withdrawal Suggestion</button>
+            <p>Suggested Amount: ₹<span id="withdrawal-suggestion">0</span></p>
+        </div>
+
+        <div class="card">
+            <h3>Transaction Log</h3>
+            <button onclick="exportCSV()">Export CSV</button>
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>Account</th><th>Amount (₹)</th><th>Type</th></tr>
+                </thead>
+                <tbody id="transaction-log"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="notification-box"></div>
+
+    <script>
+        let totalEarnings = 0;
+        let transactionHistory = [];
+        let bankAccounts = [];
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (email === 'demo@gmail.com' && password === '@12345') {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('dashboard-section').style.display = 'block';
+                document.getElementById('user-email').innerText = email;
+                Notification.requestPermission();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function addBankAccount() {
+            const bankName = document.getElementById('bank-name').value;
+            const holderName = document.getElementById('holder-name').value;
+            const accNumber = document.getElementById('account-number').value;
+            const ifsc = document.getElementById('ifsc').value;
+            const mobile = document.getElementById('mobile-number').value;
+            const accType = document.getElementById('acc-type').value;
+
+            if (!bankName || !holderName || !accNumber || !ifsc || !mobile) {
+                alert('Fill all fields');
+                return;
+            }
+
+            const newAccount = { bankName, holderName, accNumber, ifsc, mobile, accType };
+            bankAccounts.push(newAccount);
+
+            simulateDepositNotifications(newAccount);
+
+            alert('Account added successfully');
+        }
+
+        function simulateDepositNotifications(account) {
+            function randomTime() {
+                return Math.floor(Math.random() * (60000 - 1000 + 1)) + 1000;
+            }
+
+            setInterval(() => {
+                const randomAmount = Math.floor(Math.random() * (5000 - 100 + 1)) + 100;
+                const commission = account.accType === 'corporate' ? 10 : 5;
+                const netAmount = randomAmount - (randomAmount * commission / 100);
+                totalEarnings += netAmount;
+
+                const now = new Date().toLocaleString();
+                transactionHistory.push({
+                    date: now,
+                    account: `${account.bankName} (${account.accNumber})`,
+                    amount: netAmount.toFixed(2),
+                    type: 'Deposit'
+                });
+
+                const row = `<tr><td>${now}</td><td>${account.bankName} (${account.accNumber})</td><td>₹${netAmount.toFixed(2)}</td><td>Deposit</td></tr>`;
+                document.getElementById('transaction-log').innerHTML = row + document.getElementById('transaction-log').innerHTML;
+
+                document.getElementById('total-earnings').innerText = totalEarnings.toFixed(2);
+
+                showNotification(account.bankName, account.accNumber, netAmount.toFixed(2));
+            }, randomTime());
+        }
+
+        function generateWithdrawal() {
+            const suggestedAmount = Math.floor(Math.random() * (10000 - 500 + 1)) + 500;
+            document.getElementById('withdrawal-suggestion').innerText = suggestedAmount;
+        }
+
+        function showNotification(bankName, accNumber, amount) {
+            const box = document.getElementById('notification-box');
+            const item = document.createElement('div');
+            item.classList.add('notification-item');
+
+            const content = `<strong>₹${amount} Deposited</strong><small>New deposit to ${bankName} (${accNumber})</small>`;
+            item.innerHTML = content;
+
+            box.appendChild(item);
+
+            setTimeout(() => {
+                box.removeChild(item);
+            }, 5000);
+        }
+
+        function exportCSV() {
+            let csv = "Date,Account,Amount,Type\n";
+            transactionHistory.forEach(tx => {
+                csv += `"${tx.date}","${tx
