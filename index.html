@@ -167,6 +167,7 @@
     let totalEarnings = 0;
     let transactionHistory = [];
     let bankAccounts = [];
+    let intervals = [];
 
     function login() {
         const email = document.getElementById('email').value;
@@ -205,30 +206,41 @@
 
     function simulateDepositNotifications(account) {
         function randomTime() {
-            return Math.floor(Math.random() * (60000 - 1000 + 1)) + 1000;
+            return Math.floor(Math.random() * (10000 - 2000 + 1)) + 2000; // 2s to 10s
         }
 
-        setInterval(() => {
+        const interval = setInterval(() => {
             const randomAmount = Math.floor(Math.random() * (5000 - 100 + 1)) + 100;
             const commission = account.accType === 'corporate' ? 10 : 5;
             const netAmount = randomAmount - (randomAmount * commission / 100);
             totalEarnings += netAmount;
 
             const now = new Date().toLocaleString();
-            transactionHistory.push({
+            transactionHistory.unshift({
                 date: now,
                 account: `${account.bankName} (${account.accNumber})`,
                 amount: netAmount.toFixed(2),
                 type: 'Deposit'
             });
 
-            const row = `<tr><td>${now}</td><td>${account.bankName} (${account.accNumber})</td><td>₹${netAmount.toFixed(2)}</td><td>Deposit</td></tr>`;
-            document.getElementById('transaction-log').innerHTML = row + document.getElementById('transaction-log').innerHTML;
-
+            updateTransactionTable();
             document.getElementById('total-earnings').innerText = totalEarnings.toFixed(2);
-
             showNotification(account.bankName, account.accNumber, netAmount.toFixed(2));
         }, randomTime());
+
+        intervals.push(interval);
+    }
+
+    function updateTransactionTable() {
+        const tbody = document.getElementById('transaction-log');
+        tbody.innerHTML = transactionHistory.map(trx => {
+            return `<tr>
+                        <td>${trx.date}</td>
+                        <td>${trx.account}</td>
+                        <td>₹${trx.amount}</td>
+                        <td>${trx.type}</td>
+                    </tr>`;
+        }).join('');
     }
 
     function generateWithdrawal() {
@@ -241,5 +253,41 @@
         const item = document.createElement('div');
         item.classList.add('notification-item');
 
-        const content = `<strong>₹${amount} Deposited</strong><small>New deposit to ${bankName} (${accNumber})</small>`;
-        item.innerHTML = content
+        item.innerHTML = `<strong>₹${amount} Deposited</strong><small>New deposit to ${bankName} (${accNumber})</small>`;
+        box.appendChild(item);
+
+        setTimeout(() => {
+            item.style.animation = 'fadeOut 0.6s ease forwards';
+            setTimeout(() => box.removeChild(item), 600);
+        }, 5000);
+
+        if (Notification.permission === "granted") {
+            new Notification(`₹${amount} Deposited`, {
+                body: `New deposit to ${bankName} (${accNumber})`,
+                icon: 'favicon.png'
+            });
+        }
+    }
+
+    function exportCSV() {
+        if (transactionHistory.length === 0) {
+            alert('No transactions to export');
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
+        transactionHistory.forEach(trx => {
+            csvContent += `${trx.date},${trx.account},${trx.amount},${trx.type}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "transaction_log.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
