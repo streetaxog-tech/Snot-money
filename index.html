@@ -1,293 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>SNOT - Premium Payment Gateway Panel</title>
-    <link rel="icon" href="favicon.png" type="image/png"/>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #121212;
-            color: #e0e0e0;
-            margin: 0;
-            padding: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNOT Finance Panel</title>
+<style>
+/* Background video */
+#bg-video {
+  position: fixed;
+  right: 0; bottom: 0;
+  min-width: 100%; min-height: 100%;
+  z-index: -1;
+  object-fit: cover;
+}
 
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-        }
+/* General styles */
+body { font-family: Arial, sans-serif; margin:0; color:#e0e0e0; }
+header { text-align:center; padding:20px; color:#00d4ff; font-size:2rem; font-weight:bold; }
+.card { background: rgba(31,31,46,0.9); padding:20px; border-radius:12px; margin-bottom:20px; }
+input, select, button { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:none; font-size:1rem; }
+button { background:#00d4ff; color:#121212; cursor:pointer; font-weight:bold; }
 
-        h1 {
-            font-size: 2rem;
-            color: #00d4ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+#dashboard-section { max-width:900px; margin:20px auto; }
 
-        input, button, select {
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            margin: 8px 0;
-            width: 100%;
-            font-size: 1rem;
-        }
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+table th, table td { padding:12px; border-bottom:1px solid #444; }
 
-        button {
-            background: #00d4ff;
-            color: #121212;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .card {
-            background: #1f1f2e;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table th, table td {
-            padding: 12px;
-            border-bottom: 1px solid #444;
-        }
-
-        #notification-box {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .notification-item {
-            background: linear-gradient(135deg, #1c1c2e, #2e2e4a);
-            color: #ffffff;
-            padding: 18px 24px;
-            border-radius: 16px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-            font-family: 'Arial', sans-serif;
-            width: 320px;
-            animation: slideIn 0.8s ease, fadeOut 0.6s ease forwards;
-            opacity: 1;
-        }
-
-        .notification-item strong {
-            display: block;
-            font-size: 1.1rem;
-            margin-bottom: 6px;
-        }
-
-        .notification-item small {
-            font-size: 0.8rem;
-            color: #cccccc;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-    </style>
+/* Notifications */
+#notification-box {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; gap:12px; align-items:center; z-index:9999;
+}
+.notification-item {
+  background:linear-gradient(135deg, #1c1c2e, #2e2e4a);
+  color:#fff; padding:16px; border-radius:12px; width:350px;
+  display:flex; align-items:center; gap:12px;
+  animation: slideDown 0.5s ease, fadeOut 0.5s ease forwards;
+}
+.notification-item img { width:40px; height:40px; border-radius:6px; object-fit:cover; }
+.notification-item .text { display:flex; flex-direction:column; }
+.notification-item strong { font-size:1.1rem; }
+.notification-item small { font-size:0.8rem; color:#ccc; }
+@keyframes slideDown { from {transform:translateY(-50px); opacity:0;} to {transform:translateY(0); opacity:1;} }
+@keyframes fadeOut { 0% {opacity:1;} 80% {opacity:1;} 100% {opacity:0;} }
+</style>
 </head>
-
 <body>
 
-<header>
-    <h1><img src="logo.jpg" alt="Logo" style="height:40px;"> SNOT Panel</h1>
-</header>
+<!-- Background Video -->
+<video autoplay muted loop id="bg-video">
+  <source src="money-animation.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-<div id="login-section" class="card">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email" value="demo@gmail.com"/>
-    <input type="password" id="password" placeholder="Password" value="@12345"/>
-    <button onclick="login()">Login</button>
+<header>SNOT Finance Panel</header>
+
+<!-- Login -->
+<div id="login-section" class="card" style="max-width:400px;margin:20px auto;">
+<h2>Login</h2>
+<input type="email" id="email" placeholder="Email" value="demo@gmail.com"/>
+<input type="password" id="password" placeholder="Password" value="@12345"/>
+<button onclick="login()">Login</button>
 </div>
 
-<div id="dashboard-section" style="display: none;">
-    <div class="card">
-        <h3>Welcome, <span id="user-email"></span></h3>
-        <h3>Total Earnings: ₹<span id="total-earnings">0.00</span></h3>
-    </div>
+<!-- Dashboard -->
+<div id="dashboard-section" style="display:none;">
 
-    <div class="card">
-        <h3>Add Bank Account</h3>
-        <input type="text" id="bank-name" placeholder="Bank Name"/>
-        <input type="text" id="holder-name" placeholder="Account Holder Name"/>
-        <input type="text" id="account-number" placeholder="Account Number"/>
-        <input type="text" id="ifsc" placeholder="IFSC Code"/>
-        <input type="text" id="mobile-number" placeholder="Mobile Number"/>
-        <select id="acc-type">
-            <option value="corporate">Corporate</option>
-            <option value="saving">Saving</option>
-        </select>
-        <button onclick="addBankAccount()">Add Account</button>
-    </div>
-
-    <div class="card">
-        <h3>Withdrawal Send</h3>
-        <button onclick="generateWithdrawal()">Generate Withdrawal Suggestion</button>
-        <p>Suggested Amount: ₹<span id="withdrawal-suggestion">0</span></p>
-    </div>
-
-    <div class="card">
-        <h3>Transaction Log</h3>
-        <button onclick="exportCSV()">Export CSV</button>
-        <table>
-            <thead>
-            <tr><th>Date</th><th>Account</th><th>Amount (₹)</th><th>Type</th></tr>
-            </thead>
-            <tbody id="transaction-log"></tbody>
-        </table>
-    </div>
+<!-- Welcome & Earnings -->
+<div class="card">
+<h3>Welcome, <span id="user-email"></span></h3>
+<h3>Total Earnings: ₹<span id="total-earnings">0.00</span></h3>
 </div>
 
+<!-- Add Bank Account -->
+<div class="card">
+<h3>Add Bank Account</h3>
+<input type="text" id="bank-name" placeholder="Bank Name"/>
+<input type="text" id="holder-name" placeholder="Account Holder Name"/>
+<input type="text" id="account-number" placeholder="Account Number"/>
+<input type="text" id="ifsc" placeholder="IFSC Code"/>
+<input type="text" id="mobile-number" placeholder="Mobile Number"/>
+<select id="acc-type"><option value="corporate">Corporate</option><option value="saving">Saving</option></select>
+<button onclick="addBankAccount()">Add Account</button>
+</div>
+
+<!-- Bank Accounts List -->
+<div id="bank-accounts-container"></div>
+
+<!-- Withdrawal Section -->
+<div class="card">
+<h3>Withdrawal Suggestion</h3>
+<button onclick="generateWithdrawal()">Generate Withdrawal Suggestion</button>
+<p>Suggested Amount: ₹<span id="withdrawal-suggestion">0</span></p>
+</div>
+
+<!-- Transaction Log -->
+<div class="card">
+<h3>Transaction Log</h3>
+<button onclick="exportCSV()">Export CSV</button>
+<table>
+<thead><tr><th>Date</th><th>Account</th><th>Amount (₹)</th><th>Type</th></tr></thead>
+<tbody id="transaction-log"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Notifications -->
 <div id="notification-box"></div>
 
 <script>
-    let totalEarnings = 0;
-    let transactionHistory = [];
-    let bankAccounts = [];
-    let intervals = [];
+let totalEarnings=0;
+let transactionHistory=[];
+let bankAccounts=[];
+let bankLogos={'HDFC':'https://1000logos.net/wp-content/uploads/2021/05/HDFC-Bank-Logo.png','SBI':'https://upload.wikimedia.org/wikipedia/en/4/43/State_Bank_of_India_logo.svg','ICICI':'https://upload.wikimedia.org/wikipedia/en/f/f2/ICICI_Bank_logo.svg'};
 
-    function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+function login(){
+const email=document.getElementById('email').value;
+const password=document.getElementById('password').value;
+if(email==='demo@gmail.com' && password==='@12345'){
+document.getElementById('login-section').style.display='none';
+document.getElementById('dashboard-section').style.display='block';
+document.getElementById('user-email').innerText=email;
+}else alert('Invalid credentials');
+}
 
-        if (email === 'demo@gmail.com' && password === '@12345') {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('dashboard-section').style.display = 'block';
-            document.getElementById('user-email').innerText = email;
-            Notification.requestPermission();
-        } else {
-            alert('Invalid credentials');
-        }
-    }
+// Add bank account
+function addBankAccount(){
+const bankName=document.getElementById('bank-name').value;
+const holderName=document.getElementById('holder-name').value;
+const accNumber=document.getElementById('account-number').value;
+const ifsc=document.getElementById('ifsc').value;
+const mobile=document.getElementById('mobile-number').value;
+const accType=document.getElementById('acc-type').value;
+if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields');return;}
+const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType};
+bankAccounts.push(newAccount);
+renderBankAccounts();
+simulateDepositNotifications(newAccount);
+alert('Account added successfully');
+}
 
-    function addBankAccount() {
-        const bankName = document.getElementById('bank-name').value;
-        const holderName = document.getElementById('holder-name').value;
-        const accNumber = document.getElementById('account-number').value;
-        const ifsc = document.getElementById('ifsc').value;
-        const mobile = document.getElementById('mobile-number').value;
-        const accType = document.getElementById('acc-type').value;
+// Render bank accounts as cards with withdraw button
+function renderBankAccounts(){
+const container=document.getElementById('bank-accounts-container');
+container.innerHTML='';
+bankAccounts.forEach((acc,i)=>{
+const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/40?text=Bank';
+container.innerHTML+=`<div class="card">
+<img src="${logo}" alt="Logo" style="width:40px;height:40px;float:left;margin-right:10px;">
+<strong>${acc.bankName} (${acc.accNumber})</strong><br>
+Holder: ${acc.holderName}<br>
+<input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
+<button onclick="withdraw(${i})">Withdraw to Your Account (3% commission)</button>
+<div style="clear:both;"></div>
+</div>`;
+});
+}
 
-        if (!bankName || !holderName || !accNumber || !ifsc || !mobile) {
-            alert('Fill all fields');
-            return;
-        }
+// Withdraw per account with 3% commission
+function withdraw(index){
+const acc=bankAccounts[index];
+const input=document.getElementById('withdraw-'+index);
+let amount=parseFloat(input.value);
+if(!amount||amount<=0){alert('Enter valid amount'); return;}
+const commission=amount*0.03;
+const finalAmount=amount-commission;
+if(finalAmount>totalEarnings){alert('Insufficient balance'); return;}
+totalEarnings-=finalAmount;
+document.getElementById('total-earnings').innerText=totalEarnings.toFixed(2);
 
-        const newAccount = { bankName, holderName, accNumber, ifsc, mobile, accType };
-        bankAccounts.push(newAccount);
+const now=new Date().toLocaleString();
+transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:finalAmount.toFixed(2),type:'Withdrawal'});
+updateTransactionTable();
+showNotification(acc.bankName,acc.accNumber,finalAmount.toFixed(2)+' Sent');
+input.value='';
+}
 
-        simulateDepositNotifications(newAccount);
+// Deposit simulation per account
+function simulateDepositNotifications(acc){
+function randomTime(){return Math.floor(Math.random()*(10000-2000+1))+2000;}
+setInterval(()=>{
+const randomAmount=Math.floor(Math.random()*(5000-100+1))+100;
+const netAmount=randomAmount-(randomAmount*0.03); // 3% commission
+totalEarnings+=netAmount;
+const now=new Date().toLocaleString();
+transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:netAmount.toFixed(2),type:'Deposit'});
+updateTransactionTable();
+showNotification(acc.bankName,acc.accNumber,netAmount.toFixed(2));
+},randomTime());
+}
 
-        alert('Account added successfully');
-    }
+// Transaction table update
+function updateTransactionTable(){
+const tbody=document.getElementById('transaction-log');
+tbody.innerHTML=transactionHistory.map(trx=>`<tr><td>${trx.date}</td><td>${trx.account}</td><td>₹${trx.amount}</td><td>${trx.type}</td></tr>`).join('');
+}
 
-    function simulateDepositNotifications(account) {
-        function randomTime() {
-            return Math.floor(Math.random() * (10000 - 2000 + 1)) + 2000; // 2s to 10s
-        }
+// Generate withdrawal suggestion
+function generateWithdrawal(){
+const suggestedAmount=Math.floor(Math.random()*(10000-500+1))+500;
+document.getElementById('withdrawal-suggestion').innerText=suggestedAmount;
+}
 
-        const interval = setInterval(() => {
-            const randomAmount = Math.floor(Math.random() * (5000 - 100 + 1)) + 100;
-            const commission = account.accType === 'corporate' ? 10 : 5;
-            const netAmount = randomAmount - (randomAmount * commission / 100);
-            totalEarnings += netAmount;
+// Notifications
+function showNotification(bankName,accNumber,amount){
+const box=document.getElementById('notification-box');
+const item=document.createElement('div');
+item.classList.add('notification-item');
+const logo=bankLogos[bankName]||'https://via.placeholder.com/40?text=Bank';
+item.innerHTML=`<img src="${logo}" alt="Logo"><div class="text"><strong>₹${amount}</strong><small>${bankName} (${accNumber})</small></div>`;
+box.appendChild(item);
+setTimeout(()=>{item.style.animation='fadeOut 0.5s ease forwards';setTimeout(()=>item.remove(),500);},5000);
+}
 
-            const now = new Date().toLocaleString();
-            transactionHistory.unshift({
-                date: now,
-                account: `${account.bankName} (${account.accNumber})`,
-                amount: netAmount.toFixed(2),
-                type: 'Deposit'
-            });
-
-            updateTransactionTable();
-            document.getElementById('total-earnings').innerText = totalEarnings.toFixed(2);
-            showNotification(account.bankName, account.accNumber, netAmount.toFixed(2));
-        }, randomTime());
-
-        intervals.push(interval);
-    }
-
-    function updateTransactionTable() {
-        const tbody = document.getElementById('transaction-log');
-        tbody.innerHTML = transactionHistory.map(trx => {
-            return `<tr>
-                        <td>${trx.date}</td>
-                        <td>${trx.account}</td>
-                        <td>₹${trx.amount}</td>
-                        <td>${trx.type}</td>
-                    </tr>`;
-        }).join('');
-    }
-
-    function generateWithdrawal() {
-        const suggestedAmount = Math.floor(Math.random() * (10000 - 500 + 1)) + 500;
-        document.getElementById('withdrawal-suggestion').innerText = suggestedAmount;
-    }
-
-    function showNotification(bankName, accNumber, amount) {
-        const box = document.getElementById('notification-box');
-        const item = document.createElement('div');
-        item.classList.add('notification-item');
-
-        item.innerHTML = `<strong>₹${amount} Deposited</strong><small>New deposit to ${bankName} (${accNumber})</small>`;
-        box.appendChild(item);
-
-        setTimeout(() => {
-            item.style.animation = 'fadeOut 0.6s ease forwards';
-            setTimeout(() => box.removeChild(item), 600);
-        }, 5000);
-
-        if (Notification.permission === "granted") {
-            new Notification(`₹${amount} Deposited`, {
-                body: `New deposit to ${bankName} (${accNumber})`,
-                icon: 'favicon.png'
-            });
-        }
-    }
-
-    function exportCSV() {
-        if (transactionHistory.length === 0) {
-            alert('No transactions to export');
-            return;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
-        transactionHistory.forEach(trx => {
-            csvContent += `${trx.date},${trx.account},${trx.amount},${trx.type}\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "transaction_log.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+// Export CSV
+function exportCSV(){
+if(transactionHistory.length===0){alert('No transactions to export'); return;}
+let csvContent="data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
+transactionHistory.forEach(trx=>{csvContent+=`${trx.date},${trx.account},${trx.amount},${trx.type}\n`;});
+const encodedUri=encodeURI(csvContent);
+const link=document.createElement("a");
+link.setAttribute("href",encodedUri);
+link.setAttribute("download","transaction_log.csv");
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
 </script>
 </body>
-</html>
+    </html>
