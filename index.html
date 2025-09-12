@@ -71,12 +71,16 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 
 <header>SNOT Premium Finance Panel</header>
 
-<!-- Login -->
+<!<!-- Login -->
 <div id="login-section" class="card" style="max-width:400px;margin:20px auto;">
-<h2>Login</h2>
-<input type="email" id="email" placeholder="Email"/>
-<input type="password" id="password" placeholder="Password"/>
-<button onclick="login()">Login</button>
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email"/>
+  <input type="password" id="password" placeholder="Password"/>
+  <button onclick="login()">Login</button>
+  <!-- Forgot Password link -->
+  <p style="text-align:center; margin-top:10px;">
+    <a href="#" onclick="forgotPassword()" style="color:#00d4ff; text-decoration:underline;">Forgot Password?</a>
+  </p>
 </div>
 
 <!-- Dashboard -->
