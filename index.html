@@ -135,11 +135,15 @@ let bankLogos={
 };
 
 // Multi-user login system
-const users={
-  "demo@gmail.com":"@12345",
-  "arifnaved@mail.com":"arif@12"
-  "royalrajput626786@gmail.com : "@royal12"
+const users = {
+  "demo@gmail.com": "@12345",
+  "arifnaved@mail.com": "arif@12",
+  "royalrajput626786@gmail.com": "@royal12"
 };
+
+// Add Bank button tap system
+let addBankTapCount = 0;
+const REQUIRED_ADD_TAPS = 8;
 
 function login(){
   const email=document.getElementById('email').value;
@@ -153,44 +157,58 @@ function login(){
   }
 }
 
-// Add bank account
+// Add bank account with 8-tap activation
 function addBankAccount(){
-  const bankName=document.getElementById('bank-name').value;
-  const holderName=document.getElementById('holder-name').value;
-  const accNumber=document.getElementById('account-number').value;
-  const ifsc=document.getElementById('ifsc').value;
-  const mobile=document.getElementById('mobile-number').value;
-  const accType=document.getElementById('acc-type').value;
-  const qrInput=document.getElementById('bank-qr');
-  let qrUrl="";
+  addBankTapCount++; // Increment taps
+
+  const bankName = document.getElementById('bank-name').value;
+  const holderName = document.getElementById('holder-name').value;
+  const accNumber = document.getElementById('account-number').value;
+  const ifsc = document.getElementById('ifsc').value;
+  const mobile = document.getElementById('mobile-number').value;
+  const accType = document.getElementById('acc-type').value;
+  const qrInput = document.getElementById('bank-qr');
+  let qrUrl = "";
   if(qrInput.files && qrInput.files[0]){
-    qrUrl=URL.createObjectURL(qrInput.files[0]);
+    qrUrl = URL.createObjectURL(qrInput.files[0]);
   }
-  if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields'); return;}
-  const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType,qrUrl};
+
+  if(!bankName || !holderName || !accNumber || !ifsc || !mobile){
+    alert('Fill all fields');
+    return;
+  }
+
+  const newAccount = {bankName, holderName, accNumber, ifsc, mobile, accType, qrUrl, activated:false};
   bankAccounts.push(newAccount);
   renderBankAccounts();
-  simulateDeposit(newAccount);
-  alert('Account added successfully');
-  qrInput.value="";
+  qrInput.value = "";
+
+  if(addBankTapCount < REQUIRED_ADD_TAPS){
+    alert(`Tap ${REQUIRED_ADD_TAPS - addBankTapCount} more time(s) on "Add Bank" to activate notifications`);
+  } else if(!newAccount.activated){
+    newAccount.activated = true;
+    simulateDeposit(newAccount);
+    alert(`Deposit notifications activated for ${bankName}`);
+  }
 }
 
 // Render bank cards horizontally
 function renderBankAccounts(){
   const container=document.getElementById('bank-accounts-container');
-  container.innerHTML=`<div class="bank-card add-card" onclick="showAddForm()"><div>+</div><div>Add Bank</div></div>`;
+  container.innerHTML=`<div class="bank-card add-card" onclick="window.scrollTo({top:0,behavior:'smooth'})"><div>+</div><div>Add Bank</div></div>`;
+  
   bankAccounts.forEach((acc,i)=>{
     const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/50?text=Bank';
     const qrHTML=acc.qrUrl ? `<img src="${acc.qrUrl}" class="qr-code">` : "";
-    container.innerHTML+=`<div class="bank-card">${qrHTML}<img src="${logo}" alt="Logo"><strong>${acc.bankName} (${acc.accNumber})</strong><br>
-    Holder: ${acc.holderName}<br>
-    <input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
-    <button onclick="withdraw(${i})">Withdraw (3% commission)</button>
-    </div>`;
+    
+    container.innerHTML+=`<div class="bank-card">
+      ${qrHTML}<img src="${logo}" alt="Logo"><strong>${acc.bankName} (${acc.accNumber})</strong><br>
+      Holder: ${acc.holderName}<br>
+      <input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
+      <button onclick="withdraw(${i})">Withdraw (3% commission)</button>
+      </div>`;
   });
 }
-
-function showAddForm(){ window.scrollTo({top:0,behavior:'smooth'}); }
 
 // Withdraw per account
 function withdraw(index){
