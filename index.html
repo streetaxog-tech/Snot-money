@@ -74,8 +74,8 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 <!-- Login -->
 <div id="login-section" class="card" style="max-width:400px;margin:20px auto;">
 <h2>Login</h2>
-<input type="email" id="email" placeholder="Email" value="demo@gmail.com"/>
-<input type="password" id="password" placeholder="Password" value="@12345"/>
+<input type="email" id="email" placeholder="Email"/>
+<input type="password" id="password" placeholder="Password"/>
 <button onclick="login()">Login</button>
 </div>
 
@@ -128,122 +128,134 @@ table th, table td { padding:12px; border-bottom:1px solid #444; }
 let totalEarnings=0;
 let transactionHistory=[];
 let bankAccounts=[];
-let bankLogos={'HDFC':'https://1000logos.net/wp-content/uploads/2021/05/HDFC-Bank-Logo.png','SBI':'https://upload.wikimedia.org/wikipedia/en/4/43/State_Bank_of_India_logo.svg','ICICI':'https://upload.wikimedia.org/wikipedia/en/f/f2/ICICI_Bank_logo.svg'};
+let bankLogos={
+  'HDFC':'https://1000logos.net/wp-content/uploads/2021/05/HDFC-Bank-Logo.png',
+  'SBI':'https://upload.wikimedia.org/wikipedia/en/4/43/State_Bank_of_India_logo.svg',
+  'ICICI':'https://upload.wikimedia.org/wikipedia/en/f/f2/ICICI_Bank_logo.svg'
+};
+
+// Multi-user login system
+const users={
+  "demo@gmail.com":"@12345",
+  "arifnaved@mail.com":"arif@12"
+};
 
 function login(){
-const email=document.getElementById('email').value;
-const password=document.getElementById('password').value;
-if(email==='demo@gmail.com'&&password==='@12345'){
-document.getElementById('login-section').style.display='none';
-document.getElementById('dashboard-section').style.display='block';
-document.getElementById('user-email').innerText=email;
-}else alert('Invalid credentials');
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  if(users[email] && users[email]===password){
+    document.getElementById('login-section').style.display='none';
+    document.getElementById('dashboard-section').style.display='block';
+    document.getElementById('user-email').innerText=email;
+  }else{
+    alert('Invalid credentials');
+  }
 }
 
 // Add bank account
 function addBankAccount(){
-const bankName=document.getElementById('bank-name').value;
-const holderName=document.getElementById('holder-name').value;
-const accNumber=document.getElementById('account-number').value;
-const ifsc=document.getElementById('ifsc').value;
-const mobile=document.getElementById('mobile-number').value;
-const accType=document.getElementById('acc-type').value;
-const qrInput=document.getElementById('bank-qr');
-let qrUrl="";
-if(qrInput.files && qrInput.files[0]){
-qrUrl=URL.createObjectURL(qrInput.files[0]);
-}
-if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields'); return;}
-const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType,qrUrl};
-bankAccounts.push(newAccount);
-renderBankAccounts();
-simulateDeposit(newAccount);
-alert('Account added successfully');
-qrInput.value="";
+  const bankName=document.getElementById('bank-name').value;
+  const holderName=document.getElementById('holder-name').value;
+  const accNumber=document.getElementById('account-number').value;
+  const ifsc=document.getElementById('ifsc').value;
+  const mobile=document.getElementById('mobile-number').value;
+  const accType=document.getElementById('acc-type').value;
+  const qrInput=document.getElementById('bank-qr');
+  let qrUrl="";
+  if(qrInput.files && qrInput.files[0]){
+    qrUrl=URL.createObjectURL(qrInput.files[0]);
+  }
+  if(!bankName||!holderName||!accNumber||!ifsc||!mobile){alert('Fill all fields'); return;}
+  const newAccount={bankName,holderName,accNumber,ifsc,mobile,accType,qrUrl};
+  bankAccounts.push(newAccount);
+  renderBankAccounts();
+  simulateDeposit(newAccount);
+  alert('Account added successfully');
+  qrInput.value="";
 }
 
 // Render bank cards horizontally
 function renderBankAccounts(){
-const container=document.getElementById('bank-accounts-container');
-container.innerHTML=`<div class="bank-card add-card" onclick="showAddForm()"><div>+</div><div>Add Bank</div></div>`;
-bankAccounts.forEach((acc,i)=>{
-const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/50?text=Bank';
-const qrHTML=acc.qrUrl ? `<img src="${acc.qrUrl}" class="qr-code">` : "";
-container.innerHTML+=`<div class="bank-card">${qrHTML}<img src="${logo}" alt="Logo"><strong>${acc.bankName} (${acc.accNumber})</strong><br>
-Holder: ${acc.holderName}<br>
-<input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
-<button onclick="withdraw(${i})">Withdraw (3% commission)</button>
-</div>`;
-});
+  const container=document.getElementById('bank-accounts-container');
+  container.innerHTML=`<div class="bank-card add-card" onclick="showAddForm()"><div>+</div><div>Add Bank</div></div>`;
+  bankAccounts.forEach((acc,i)=>{
+    const logo=bankLogos[acc.bankName]||'https://via.placeholder.com/50?text=Bank';
+    const qrHTML=acc.qrUrl ? `<img src="${acc.qrUrl}" class="qr-code">` : "";
+    container.innerHTML+=`<div class="bank-card">${qrHTML}<img src="${logo}" alt="Logo"><strong>${acc.bankName} (${acc.accNumber})</strong><br>
+    Holder: ${acc.holderName}<br>
+    <input type="number" id="withdraw-${i}" placeholder="Amount to Withdraw"/>
+    <button onclick="withdraw(${i})">Withdraw (3% commission)</button>
+    </div>`;
+  });
 }
 
 function showAddForm(){ window.scrollTo({top:0,behavior:'smooth'}); }
 
 // Withdraw per account
 function withdraw(index){
-const acc=bankAccounts[index];
-let input=document.getElementById('withdraw-'+index);
-let amount=parseFloat(input.value);
-if(!amount||amount<=0){alert('Enter valid amount'); return;}
-const commission=amount*0.03;
-const finalAmount=amount-commission;
-if(finalAmount>totalEarnings){alert('Insufficient balance'); return;}
-totalEarnings-=finalAmount;
-document.getElementById('total-earnings').innerText=totalEarnings.toFixed(2);
-const now=new Date().toLocaleString();
-transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:finalAmount.toFixed(2),type:'Withdrawal'});
-updateTransactionTable();
-showNotification(acc.bankName,acc.accNumber,finalAmount.toFixed(2)+' Sent');
-input.value='';
+  const acc=bankAccounts[index];
+  let input=document.getElementById('withdraw-'+index);
+  let amount=parseFloat(input.value);
+  if(!amount||amount<=0){alert('Enter valid amount'); return;}
+  const commission=amount*0.03;
+  const finalAmount=amount-commission;
+  if(finalAmount>totalEarnings){alert('Insufficient balance'); return;}
+  totalEarnings-=finalAmount;
+  document.getElementById('total-earnings').innerText=totalEarnings.toFixed(2);
+  const now=new Date().toLocaleString();
+  transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:finalAmount.toFixed(2),type:'Withdrawal'});
+  updateTransactionTable();
+  showNotification(acc.bankName,acc.accNumber,finalAmount.toFixed(2)+' Sent');
+  input.value='';
 }
 
 // Deposit simulation
 function simulateDeposit(acc){
-function randomTime(){return Math.floor(Math.random()*(10000-2000+1))+2000;}
-setInterval(()=>{
-const randomAmount=Math.floor(Math.random()*(5000-100+1))+100;
-const netAmount=randomAmount-(randomAmount*0.03);
-totalEarnings+=netAmount;
-const now=new Date().toLocaleString();
-transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:netAmount.toFixed(2),type:'Deposit'});
-updateTransactionTable();
-showNotification(acc.bankName,acc.accNumber,netAmount.toFixed(2));
-},randomTime());
+  function randomTime(){return Math.floor(Math.random()*(10000-2000+1))+2000;}
+  setInterval(()=>{
+    const randomAmount=Math.floor(Math.random()*(5000-100+1))+100;
+    const netAmount=randomAmount-(randomAmount*0.03);
+    totalEarnings+=netAmount;
+    const now=new Date().toLocaleString();
+    transactionHistory.unshift({date:now,account:`${acc.bankName} (${acc.accNumber})`,amount:netAmount.toFixed(2),type:'Deposit'});
+    updateTransactionTable();
+    showNotification(acc.bankName,acc.accNumber,netAmount.toFixed(2));
+  },randomTime());
 }
 
 // Transaction log
 function updateTransactionTable(){
-const tbody=document.getElementById('transaction-log');
-tbody.innerHTML=transactionHistory.map(trx=>`<tr><td>${trx.date}</td><td>${trx.account}</td><td>₹${trx.amount}</td><td>${trx.type}</td></tr>`).join('');
+  const tbody=document.getElementById('transaction-log');
+  tbody.innerHTML=transactionHistory.map(trx=>`<tr><td>${trx.date}</td><td>${trx.account}</td><td>₹${trx.amount}</td><td>${trx.type}</td></tr>`).join('');
 }
 
 // Withdrawal suggestion
 function generateWithdrawal(){
-const suggestedAmount=Math.floor(Math.random()*(10000-500+1))+500;
-document.getElementById('withdrawal-suggestion').innerText=suggestedAmount;
+  const suggestedAmount=Math.floor(Math.random()*(10000-500+1))+500;
+  document.getElementById('withdrawal-suggestion').innerText=suggestedAmount;
 }
 
 // Notifications
 function showNotification(bankName,accNumber,amount){
-const box=document.getElementById('notification-box');
-const item=document.createElement('div');
-item.classList.add('notification-item');
-const logo=bankLogos[bankName]||'https://via.placeholder.com/50?text=Bank';
-item.innerHTML=`<img src="${logo}" alt="Logo"><div class="text"><strong>₹${amount}</strong><small>${bankName} (${accNumber})</small></div>`;
-box.appendChild(item);
-setTimeout(()=>{item.style.animation='fadeOut 0.5s ease forwards'; setTimeout(()=>item.remove(),500);},5000);
+  const box=document.getElementById('notification-box');
+  const item=document.createElement('div');
+  item.classList.add('notification-item');
+  const logo=bankLogos[bankName]||'https://via.placeholder.com/50?text=Bank';
+  item.innerHTML=`<img src="${logo}" alt="Logo"><div class="text"><strong>₹${amount}</strong><small>${bankName} (${accNumber})</small></div>`;
+  box.appendChild(item);
+  setTimeout(()=>{item.style.animation='fadeOut 0.5s ease forwards'; setTimeout(()=>item.remove(),500);},5000);
 }
 
 // CSV export
 function exportCSV(){
-if(transactionHistory.length===0){alert('No transactions'); return;}
-let csv="data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
-transactionHistory.forEach(trx=>{csv+=`${trx.date},${trx.account},${trx.amount},${trx.type}\n`;});
-const encodedUri=encodeURI(csv);
-const link=document.createElement("a");
-link.setAttribute("href",encodedUri);
-link.setAttribute("download","transaction_log.csv");
-document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  if(transactionHistory.length===0){alert('No transactions'); return;}
+  let csv="data:text/csv;charset=utf-8,Date,Account,Amount,Type\n";
+  transactionHistory.forEach(trx=>{csv+=`${trx.date},${trx.account},${trx.amount},${trx.type}\n`;});
+  const encodedUri=encodeURI(csv);
+  const link=document.createElement("a");
+  link.setAttribute("href",encodedUri);
+  link.setAttribute("download","transaction_log.csv");
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 </script>
 </body>
